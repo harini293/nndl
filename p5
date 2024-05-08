@@ -1,0 +1,66 @@
+import tensorflow as tf
+from tensorflow.keras import layers, models
+
+# Define helper functions
+
+def create_convolutional_layer(filters, kernel_size, activation='relu', input_shape=None):
+   
+ Create a convolutional layer with specified parameters.
+
+    if input_shape:
+        return layers.Conv2D(filters, kernel_size, activation=activation, input_shape=input_shape)
+    else:
+        return layers.Conv2D(filters, kernel_size, activation=activation)
+
+def create_maxpooling_layer(pool_size=(2, 2)):
+
+    Create a max pooling layer with specified pool size.
+    return layers.MaxPooling2D(pool_size)
+
+def create_dense_layer(units, activation='relu'):
+
+    Create a dense layer with specified number of units and activation function.
+    return layers.Dense(units, activation=activation)
+
+# Build ConvNet model
+
+def build_convnet(input_shape, num_classes):
+
+    Build a Convolutional Neural Network model using TensorFlow.
+    model = models.Sequential()
+
+    # Convolutional layers
+    model.add(create_convolutional_layer(32, (3, 3), input_shape=input_shape))
+    model.add(create_maxpooling_layer())
+    model.add(create_convolutional_layer(64, (3, 3)))
+    model.add(create_maxpooling_layer())
+
+    # Flatten layer
+    model.add(layers.Flatten())
+
+    # Dense layers
+    model.add(create_dense_layer(128))
+    model.add(create_dense_layer(num_classes, activation='softmax'))
+
+    # Compile the model
+    model.compile(optimizer='adam',
+                  loss='sparse_categorical_crossentropy',
+                  metrics=['accuracy'])
+
+    return model
+
+# Load dataset (Fashion MNIST as an example)
+
+(train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.fashion_mnist.load_data()
+
+# Preprocess the data
+train_images = train_images.reshape((60000, 28, 28, 1)).astype('float32') / 255
+test_images = test_images.reshape((10000, 28, 28, 1)).astype('float32') / 255
+
+# Build and train the model
+input_shape = (28, 28, 1)
+num_classes = 10
+model = build_convnet(input_shape, num_classes)
+
+model.fit(train_images, train_labels, epochs=10, validation_data=(test_images, test_labels))
+
